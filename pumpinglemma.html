@@ -1,0 +1,54 @@
+<html>
+    <head>
+        <title>
+            Pumping Lemma for Regular Languages
+        </title>
+    </head>
+    <body>
+        <h1>Pumping Lemma for Regular Languages</h1>
+        <p>
+            <hr/>
+            <i>
+               Let L be a regular language.
+               There is an integer p &le; 1
+               such that any string w &isin; L with |w| &ge; p
+               can be rewritten as w = xyz such that y &ne; &#949;, |xy| &le; p,
+               and xy<sup>i</sup>z &isin; L for each i &ge; 0.
+            </i>
+            <hr/>
+        </p>
+        <p>
+            The five parts of this theorem can be restated in the following way:<br/>
+            <p>
+            <b>(1)</b> <i>for each</i> regular language <i>L</i>,<br/>
+            <b>(2)</b> <i>there exists</i> a <i>p</i> &ge; 1, such that<br/>
+            <b>(3)</b> <i>for each</i> string <i>w</i> &isin; <i>L</i> with |<i>w</i>| &ge; <i>p</i>,<br/>
+            <b>(4)</b> <i>there exist</i> strings <i>x</i>, <i>y</i>, <i>z</i> with <i>w</i> = <i>xyz</i>, <i>y</i> &ne; &#949;, and |<i>xy</i>| &le; <i>p</i>, such that<br/>
+            <b>(5)</b> <i>for each i</i> &ge; 0, <i>xy<sup>i</sup></i>z &isin; <i>L</i>.
+            </p>
+            <h2>Example: <i>L</i> = { <i>a<sup>i</sup>b<sup>i</sup></i> : <i>i</i> &ge; 0 }</h2>
+            <ul>
+                <li>By <b>(1)</b>, we begin by assuming that <i>L</i> is regular.</li>
+                <li><b>(2)</b> says that if we can find a single <i>p</i> that satisfies <b>(3)-(5)</b>, then <i>L</i> is indeed regular.</li>
+                <li>
+                    For every <i>p</i> &ge; 1, we can build a string <i>w</i> &isin; L with |<i>w</i>| &ge; p in the form of <i>w</i> = <i>a</i><sup>p</sup><i>b</i><sup>p</sup>.
+                    In these cases, |<i>w</i>| = 2<i>p</i>, which always satisfies |<i>w</i>| &ge; <i>p</i>. Therefore, <b>(4)-(5)</b> should always be possible to satisfy for <i>w</i>.
+                </li>
+                <li>
+                    Since |<i>xy</i>| &le; <i>p</i> and the first <i>p</i> symbols of <i>w</i> are all <i>a</i>, it must be that <i>y</i> = <i>a</i><sup>k</sup> where 0 &lt; <i>k</i> &le; <i>p</i>.
+                    It follows that <i>x</i> = <i>a</i><sup>p - k</sup> and <i>z</i> = <i>b</i><sup>p</sup>.
+                    There must then exist a <i>k</i> for which <b>(5)</b> is satisfied.
+                </li>
+                <li>
+                    No matter what choice of <i>k</i> is made, setting <i>i</i> = 0 generates the string <i>xz</i> = <i>a</i><sup>p - k</sup><i>b</i><sup>p</sup>.
+                    Since <i>p</i> - <i>k</i> &ne; <i>p</i>, this string is not in <i>L</i>. Therefore, we cannot satisfy <b>(5)</b>, which means we have found a contradiction.
+                </li>
+            </ul>
+            This shows that no matter what <i>p</i> is chosen, we can always find a string which will satisfy the requirements of <b>(3)</b> but fail to satisfy the requirements of <b>(4)-(5)</b>.
+            Therefore, <i>L</i> is not a regular language.
+        </p>
+        <p>
+        <a href="index.html">back</a>
+        </p>
+    </body>
+</html>
