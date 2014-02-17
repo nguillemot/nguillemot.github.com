@@ -31,20 +31,20 @@
             </p>
             <h2>Example: <i>L</i> = { <i>a<sup>i</sup>b<sup>i</sup></i> : <i>i</i> &ge; 0 }</h2>
             <ul>
-                <li>By <b>(1)</b>, we begin by assuming that <i>L</i> is regular. This assumption means that it must be possible to satisfy <b>(2)-(5)</b></li>
-                <li><b>(2)</b> says that if <i>L</i> is regular, then we must be able to find find a <i>p</i> for which <b>(3)-(5)</b> are satisfied. We will show that no matter what <i>p</i> is chosen, the conditions will not be satisfied.</li>
+                <li>By <b>(1)</b>, we begin by assuming that <i>L</i> is regular. This assumption means that it must be possible to satisfy <b>(2)-(5)</b></li>.
+                <li><b>(2)</b> says that if <i>L</i> is regular, then we must be able to find find a <i>p</i> for which <b>(3)-(5)</b> are satisfied. We will show that no matter what <i>p</i> is chosen, the conditions of <b>(3)-(5)</b> will not be satisfied.</li>
                 <li>
                     For every <i>p</i> &ge; 1, we can build a string <i>w</i> &isin; L with |<i>w</i>| &ge; <i>p</i> in the form of <i>w</i> = <i>a</i><sup>p</sup><i>b</i><sup>p</sup>.
                     In these cases, |<i>w</i>| = 2<i>p</i>, which always satisfies |<i>w</i>| &ge; <i>p</i> as required by <b>(3)</b>. Therefore, <b>(4)-(5)</b> should always be possible to satisfy for this <i>w</i>.
                 </li>
                 <li>
-                    Since |<i>xy</i>| &le; <i>p</i> and the first <i>p</i> symbols of <i>w</i> are all <i>a</i>, it must be that <i>y</i> = <i>a</i><sup>k</sup> where 0 &lt; <i>k</i> &le; <i>p</i>.
-                    It follows that <i>x</i> = <i>a</i><sup>p - k</sup> and <i>z</i> = <i>b</i><sup>p</sup>. This factoring of <i>w</i> = <i>xyz</i> satisfies <b>(4)</b>.
-                    There must then exist a <i>k</i> for which <b>(5)</b> is satisfied.
+                    Since the factors <i>x</i> and <i>y</i> must satisfy |<i>xy</i>| &le; <i>p</i> and the first <i>p</i> symbols of <i>w</i> are all <i>a</i>, it must be that <i>y</i> = <i>a</i><sup>k</sup> where 0 &lt; <i>k</i> &le; <i>p</i>.
+                    It follows that <i>x</i> = <i>a</i><sup>j</sup> with <i>k + j</i> &le; <i>p</i> and <i>z</i> = <i>a</i><sup>p - k - j</sup><i>b</i><sup>p</sup>. This factoring of <i>w</i> = <i>xyz</i> satisfies <b>(4)</b>.
+                    There must then exist a <i>k</i> and <i>j</i> for which <b>(5)</b> is satisfied.
                 </li>
                 <li>
-                    No matter what choice of <i>k</i> is made, setting <i>i</i> = 0 generates the string <i>xz</i> = <i>a</i><sup>p - k</sup><i>b</i><sup>p</sup>.
-                    Since <i>p</i> - <i>k</i> &ne; <i>p</i>, this string is not in <i>L</i>. Therefore, we cannot satisfy <b>(5)</b>, which means we have found a contradiction.
+                    No matter what choice of <i>k</i> and <i>j</i> is made, setting <i>i</i> = 0 generates the string <i>xz</i> = <i>a</i><sup>j</sup><i>b</i><sup>p</sup>.
+                    Since <i>j</i> &lt; <i>p</i>, this string is not in <i>L</i>. Therefore, we cannot satisfy <b>(5)</b>, which means we have found a contradiction.
                 </li>
             </ul>
             This shows that no matter what <i>p</i> is chosen in <b>(2)</b>, it will always be impossible to satisfy the requirements of <b>(4)-(5)</b> for some string that satisfies the requirements of <b>(3)</b>.<br/>
