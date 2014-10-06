@@ -1,42 +1,40 @@
 <html>
-    <head>
-        <title>
-            C++ Thoughts
-        </title>
-    </head>
-    <body>
-        <h1>C++ Thoughts</h1>
-        <p>
-            Random little thoughts about C++ coding that have sprung up in my head over the years. Sometimes inspired by other people, sometimes inspired by my mistakes.
-        </p>
+<head>
+<title>
+C++ Thoughts
+</title>
+</head>
+<body>
+<h1>C++ Thoughts</h1>
+<p>
+Random little thoughts about C++ coding that have sprung up in my head over the years. Sometimes inspired by other people, sometimes inspired by my mistakes.
+</p>
+<i>Last updated October 06 2014</i>
 
-		<i>Last modified October 5th 2014</i>
+<h2 id="#Copy_and_move_are_quirky">Copy and move are quirky</h2>
+<p>
+Copy and move are quirky; their performance characteristics differ greatly depending on the implementation details of the class. If you want to use specific operations for performance reasons, use functions that actually do what you want (eg. swap) rather than assuming the implementation of a move is the one you expect.
+</p>
+<i>Inspired by the contrast of reasoning about performance between Mike Acton and Herb Sutter's keynotes at cppcon 2014.</i>
+</br>
 
-        <h2>Copy and move are quirky</h2>
-        <p>
-            Copy and move are quirky; their performance characteristics differ greatly depending on the implementation details of the class.
-            If you want to use specific operations for performance reasons, use functions that actually do what you want (eg. swap) rather than assuming the implementation of a move is the one you expect.
-        </p>
-        <i>Inspired by the contrast of reasoning about performance between Mike Acton and Herb Sutter's keynotes at cppcon 2014.</i>
-        </br>
+<h2 id="#Movable_classes_are_containers">Movable classes are containers</h2>
+<p>
+If you make a class movable, it will behave as if it was a container rather than the object itself. 
+That is because the address of an object can no longer be used to represent the identity of the instance.
+This makes it impossible to reliably track an object using its address, since the object would have to provide a hook in its move assignment operator that patches the pointer used to track the object.
+Doing such actual work in a move constructor feels wrong, but might be an important detail for a C++11 observer pattern implementation that doesn't want to require wrapping everything in another container like shared_ptr.
+</p>
+<i>Inspired from somebody's tweet about the error of using an address as an identity for an object, and finding myself making the same mistake later.</i>
+</br>
 
-        <h2>Movable classes are containers</h2>
-        <p>
-            If you make a class movable, it will behave as if it was a container rather than the object itself. 
-            That is because the address of an object can no longer be used to represent the identity of the instance.
-            This makes it impossible to reliably track an object using its address, since the object would have to provide a hook in its move assignment operator that patches the pointer used to track the object.
-            Doing such actual work in a move constructor feels wrong, but might be an important detail for a C++11 observer pattern implementation that doesn't want to require wrapping everything in another container like shared_ptr.
-        </p>
-        <i>Inspired from somebody's tweet about the error of using an address as an identity for an object, and finding myself making the same mistake later.</i>
-        </br>
-
-        <h2>Don't build coding standards assumptions into your interfaces</h2>
-        <p>
-            C++ simplifies code by letting you build assumptions about usage into the interface of a class, and offers a wide variety of methods for implementing those same assumptions using very different coding standards conventions (eg. exceptions versus error codes.)
-            It's hard to build a timeless interface when you build assumptions about usage into it, so offer an interface layer for your code with fewer assumptions.
-            An easy way to do this is to limit your interface to be implemented as a C header, which actually comes with other bonuses like ABI stability.
-        </p>
-        <i>Inspired from Stefanus Du Toit's talk on Hourglass Interfaces</i>
-        </br>
-    </body>
+<h2 id="#Don't_build_coding_standards_assumptions_into_your_interfaces">Don't build coding standards assumptions into your interfaces</h2>
+<p>
+C++ simplifies code by letting you build assumptions about usage into the interface of a class, and offers a wide variety of methods for implementing those same assumptions using very different coding standards conventions (eg. exceptions versus error codes.)
+It's hard to build a timeless interface when you build assumptions about usage into it, so offer an interface layer for your code with fewer assumptions.
+An easy way to do this is to limit your interface to be implemented as a C header, which actually comes with other bonuses like ABI stability.
+</p>
+<i>Inspired from Stefanus Du Toit's talk on Hourglass Interfaces</i>
+</br>
+</body>
 </html>
