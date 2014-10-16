@@ -9,7 +9,7 @@ C++ Thoughts
 <p>
 Random little thoughts about C++ coding that have sprung up in my head over the years. Sometimes inspired by other people, sometimes inspired by my mistakes.
 </p>
-<i>Last updated October 06 2014</i>
+<i>Last updated October 15 2014</i>
 
 <h2 id="#Copy_and_move_are_quirky">Copy and move are quirky</h2>
 <p>
@@ -35,6 +35,17 @@ It's hard to build a timeless interface when you build assumptions about usage i
 An easy way to do this is to limit your interface to be implemented as a C header, which actually comes with other bonuses like ABI stability.
 </p>
 <i>Inspired from Stefanus Du Toit's talk on Hourglass Interfaces</i>
+</br>
+
+<h2 id="#bool(ean)_is_a_pretty_bad_name_for_a_true/false_type">bool(ean) is a pretty bad name for a true/false type</h2>
+<p>
+This is not strictly restricted to C++.
+The etymology of primitive types generally makes sense: int for integers, float for floating point, long for bigger numbers... but "bool" remains kinda meaningless.
+It's just some guy's name. I think this just needlessly increases the learning curve for teaching programming to young students who have not yet studied boolean algebra.
+There are probably better names out there.
+Some suggestions: tof/torf (true or false), truth, predicate, logic, bit... Or as C did it, just keep them ints.
+</p>
+<i>Inspired by my difficulty to grasp booleans as a youngster.</i>
 </br>
 </body>
 </html>

@@ -21,7 +21,15 @@ Doing such actual work in a move constructor feels wrong, but might be an import
 """C++ simplifies code by letting you build assumptions about usage into the interface of a class, and offers a wide variety of methods for implementing those same assumptions using very different coding standards conventions (eg. exceptions versus error codes.)
 It's hard to build a timeless interface when you build assumptions about usage into it, so offer an interface layer for your code with fewer assumptions.
 An easy way to do this is to limit your interface to be implemented as a C header, which actually comes with other bonuses like ABI stability.""",
-"Inspired from Stefanus Du Toit's talk on Hourglass Interfaces")
+"Inspired from Stefanus Du Toit's talk on Hourglass Interfaces"),
+
+("bool(ean) is a pretty bad name for a true/false type",
+"""This is not strictly restricted to C++.
+The etymology of primitive types generally makes sense: int for integers, float for floating point, long for bigger numbers... but \"bool\" remains kinda meaningless.
+It's just some guy's name. I think this just needlessly increases the learning curve for teaching programming to young students who have not yet studied boolean algebra.
+There are probably better names out there.
+Some suggestions: tof/torf (true or false), truth, predicate, logic, bit... Or as C did it, just keep them ints.""",
+"Inspired by my difficulty to grasp booleans as a youngster.")
 
 ] # End of thoughts
 
