@@ -16,13 +16,13 @@ This web page attempts to keep track of all these kinds of decisions to make it 
 <ol>
   <li>The API in use (eg: OpenGL, OpenGL ES, WebGL)</li>
   <li>The version of the API in use (eg: GL 4.3, GL ES 3.0, WebGL 2.0)</li>
-  <li>The extensions available (eg: GL_ARB_texture_non_power_of_two, GL_KHR_debug)</li>
+  <li>The extensions available (eg: <pre>GL_ARB_texture_non_power_of_two</pre>, <pre>GL_KHR_debug</pre>)</li>
 </ol>
 Furthermore, there exists quirks and bugs in GL implementations that will be documented here as they become known.</p>
 
 <h1>Determining the API in use and its version</h1>
 
-<p>This is done using the output of <i>glGetString(GL_VERSION)</i>:<br/>
+<p>This is done using the output of <pre>glGetString(GL_VERSION)</pre>:<br/>
 <ul>
   <li>In OpenGL, this function returns <b>major_number.minor_number</b> or <b>major_number.minor_number.release_number</b>, optionally followed by a space and vendor-specific information.</li>
   <li>In OpenGL ES, this function returns <b>OpenGL ES major_number.minor_number</b> or <b>major_number.minor_number.release_number</b> optionally followed by a space and vendor-specific information.</li>
@@ -30,7 +30,7 @@ Furthermore, there exists quirks and bugs in GL implementations that will be doc
 </ul>
 
 <p>Thus, it is necessary to check if the string begins with "WebGL" or "OpenGL ES" or neither in order to determine what API is currently in use.
-The version of the API in use can then be determined by parsing the major_number.minor_number from the string.</p>
+The version of the API in use can then be determined by parsing the <b>major_number.minor_number</b> from the string.</p>
 
 <h2>Example code</h2>
 
