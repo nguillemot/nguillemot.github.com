@@ -24,9 +24,9 @@ Furthermore, there exists quirks and bugs in GL implementations that will be doc
 
 <p>This is done using the output of <pre><code>glGetString(GL_VERSION)</code></pre>:<br/>
 <ul>
-  <li>In OpenGL, this function returns <b>major_number.minor_number</b> or <b>major_number.minor_number.release_number</b>, optionally followed by a space and vendor-specific information.</li>
-  <li>In OpenGL ES, this function returns <b>OpenGL ES major_number.minor_number</b> or <b>major_number.minor_number.release_number</b> optionally followed by a space and vendor-specific information.</li>
-  <li>In WebGL, this function returns <b>WebGL major_number.minor_number</b> optionally followed by a space and vendor-specific information.</li>
+  <li>In OpenGL, this function returns "<b>major_number.minor_number</b>" or "<b>major_number.minor_number.release_number</b>", optionally followed by a space and vendor-specific information.</li>
+  <li>In OpenGL ES, this function returns "<b>OpenGL ES major_number.minor_number</b>" or "<b>major_number.minor_number.release_number</b>" optionally followed by a space and vendor-specific information.</li>
+  <li>In WebGL, this function returns "<b>WebGL major_number.minor_number</b>" optionally followed by a space and vendor-specific information.</li>
 </ul>
 
 <p>Thus, it is necessary to check if the string begins with "WebGL" or "OpenGL ES" or neither in order to determine what API is currently in use.
