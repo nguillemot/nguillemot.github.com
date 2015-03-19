@@ -20,17 +20,33 @@ This web page attempts to keep track of all these kinds of decisions to make it 
 </ol>
 Furthermore, there exists quirks and bugs in GL implementations that will be documented here as they become known.</p>
 
-<hi>Determining the API in use and its version</hi>
+<h1>Determining the API in use and its version</h1>
 
 <p>This is done using the output of <i>glGetString(GL_VERSION)</i>:<\br>
 <ul>
-  <li>In OpenGL, this function returns <i>major_number.minor_number</i> or <i>major_number.minor_number.release_number</i>, optionally followed by a space and vendor-specific information.</li>
-  <li>In OpenGL ES, this function returns <i>OpenGL ES major_number.minor_number</i> or <i>major_number.minor_number.release_number</i> optionally followed by a space and vendor-specific information.</li>
-  <li>In WebGL, this function returns <i>WebGL major_number.minor_number</i> optionally followed by a space and vendor-specific information</i>.</li>
+  <li>In OpenGL, this function returns "major_number.minor_number" or "major_number.minor_number.release_number", optionally followed by a space and vendor-specific information.</li>
+  <li>In OpenGL ES, this function returns "OpenGL&lt;space&gt;ES&lt;space&gt;major_number.minor_number" or "major_number.minor_number.release_number" optionally followed by a space and vendor-specific information.</li>
+  <li>In WebGL, this function returns "WebGL&lt;space&gt;major_number.minor_number" optionally followed by a space and vendor-specific information.</li>
 </ul>
 
-Thus, it is necessary to check if the string begins with "WebGL" or "OpenGL ES" or neither in order to determine what API is currently in use.
-The version of the API in use can then be determined by parsing the major_number.minor_number from the string.
+<p>Thus, it is necessary to check if the string begins with "WebGL" or "OpenGL ES" or neither in order to determine what API is currently in use.
+The version of the API in use can then be determined by parsing the major_number.minor_number from the string.</p>
+
+<h2>Example code</h2>
+
+<pre>
+const char* version = glGetString(GL_VERSION);
+if (strncmp(version, "WebGL ", 6) == 0) {
+    api = WebGL;
+    version += 6;
+} else if (strncmp(version, "OpenGL ES", 9) == 0) {
+    api = OpenGLES;
+    version += 9;
+} else {
+    api = OpenGL;
+}
+sscanf(version, "%d.%d", &major, &minor);
+</pre>
 
 </body>
 </html>
