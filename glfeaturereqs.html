@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <title>GL Feature Requirements</title>
+    <title>GL Feature Requirements</title>
 </head>
 <body>
 
@@ -14,19 +14,24 @@ This web page attempts to keep track of all these kinds of decisions to make it 
 
 <p>From a high level perspective, each GL featurehas different requirements to be available based on:
 <ol>
-  <li>The API in use (eg: OpenGL, OpenGL ES, WebGL)</li>
-  <li>The version of the API in use (eg: GL 4.3, GL ES 3.0, WebGL 2.0)</li>
-  <li>The extensions available (eg: <code>GL_ARB_texture_non_power_of_two</code>, <code>GL_KHR_debug</code>)</li>
+    <li>The API in use (eg: OpenGL, OpenGL ES, WebGL)</li>
+    <li>The version of the API in use (eg: GL 4.3, GL ES 3.0, WebGL 2.0)</li>
+    <li>The extensions available (eg: <code>GL_ARB_texture_non_power_of_two</code>, <code>GL_KHR_debug</code>)</li>
 </ol>
 Furthermore, there exists quirks and bugs in GL implementations that will be documented here as they become known.</p>
 
+<h1>Dynamically querying an entry point</h1>
+
+TODO
+
 <h1>Determining the API in use and its version</h1>
 
-<p>This is done using the output of <code>glGetString(GL_VERSION)</code>:<br/>
+<p>Before doing almost anything else, you need to figure out what API you are using and what version it is.
+This is done using the output of <code>glGetString(GL_VERSION)</code>, which is interpreted as follows:<br/>
 <ul>
-  <li>In OpenGL, this function returns "<b>major_number.minor_number</b>" or "<b>major_number.minor_number.release_number</b>", optionally followed by a space and vendor-specific information.</li>
-  <li>In OpenGL ES, this function returns "<b>OpenGL ES major_number.minor_number</b>" or "<b>major_number.minor_number.release_number</b>" optionally followed by a space and vendor-specific information.</li>
-  <li>In WebGL, this function returns "<b>WebGL major_number.minor_number</b>" optionally followed by a space and vendor-specific information.</li>
+    <li>In OpenGL, this function returns "<b>major_number.minor_number</b>" or "<b>major_number.minor_number.release_number</b>", optionally followed by a space and vendor-specific information.</li>
+    <li>In OpenGL ES, this function returns "<b>OpenGL ES major_number.minor_number</b>" or "<b>major_number.minor_number.release_number</b>" optionally followed by a space and vendor-specific information.</li>
+    <li>In WebGL, this function returns "<b>WebGL major_number.minor_number</b>" optionally followed by a space and vendor-specific information.</li>
 </ul>
 
 <p>Thus, it is necessary to check if the string begins with "WebGL" or "OpenGL ES" or neither in order to determine what API is currently in use.
@@ -34,19 +39,59 @@ The version of the API in use can then be determined by parsing the <b>major_num
 
 <h2>Example code</h2>
 
+<p>The three OpenGL APIs will be described using the following <code>enum</code>:</p>
+
+<pre>
+enum Api
+{
+    OpenGL,
+    OpenGLES,
+    WebGL
+};
+</pre>
+
+<p>With this, we can determine the API and its version:</p>
+
 <pre>
 const char* version = glGetString(GL_VERSION);
 if (strncmp(version, "WebGL ", 6) == 0) {
-    api = WebGL;
+    myApi = WebGL;
     version += 6;
-} else if (strncmp(version, "OpenGL ES", 9) == 0) {
-    api = OpenGLES;
-    version += 9;
+} else if (strncmp(version, "OpenGL ES ", 10) == 0) {
+    myApi = OpenGLES;
+    version += 10;
 } else {
-    api = OpenGL;
+    myApi = OpenGL;
 }
-sscanf(version, "%d.%d", &amp;major, &amp;minor);
+sscanf(version, "%d.%d", &amp;myMajorVersion, &amp;myMinorVersion);
 </pre>
+
+For convenience, this information is used to define a <code>VersionCheck</code> function that makes it easy to check for API versions:
+
+<pre>
+int VersionCheck(Api api, int major, int minor)
+{
+    return myApi == api
+    &amp;&amp; (myMajorVersion &gt; major || (myMajorVersion == major &amp;&amp; myMinorVersion &gt;= minor));
+}
+</pre>
+
+<h1>Determining the available extensions</h1>
+
+<p>There are two ways to get the list of extensions depending on the version of the GL:
+<code>glGetStringi(GL_EXTENSIONS, i)</code> and <code>glGetString(GL_EXTENSIONS)</code>.
+The first method allows you to iterate over individual extensions by their index, 
+while the second method returns a big string that stores the names of the supported extensions, separated by spaces.
+The first method is more convenient, but only available in more modern implementations.
+The second method is slightly inconvenient because it requires parsing the extension string.</p>
+
+<p>It should be noted that WebGL has its own specialized functions for checking a specific extension or reading the list of extensions,
+which are <code>getExtension</code> and <code>getSupportedExtensions</code>, respectively.
+If you are using WebGL through emscripten, calls of <code>glGetString(GL_EXTENSIONS)</code> automatically get translated to those WebGL-specific calls.</p>
+
+<h2>Example code</h2>
+
+TODO
 
 </body>
 </html>
