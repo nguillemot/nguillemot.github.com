@@ -6,6 +6,7 @@
 <body>
 
 <h1>What is this?</h1>
+
 <p>With GL it's possible to write one code base that targets a very wide range of platforms,
 which is done by dynamically querying the hardware's capabilities.
 However, it's hard to know what are all the different ways to access a feature and what needs to be checked before using a feature.
@@ -18,6 +19,18 @@ This web page attempts to keep track of all these kinds of decisions to make it 
   <li>The extensions available (eg: GL_ARB_texture_non_power_of_two, GL_KHR_debug)</li>
 </ol>
 Furthermore, there exists quirks and bugs in GL implementations that will be documented here as they become known.</p>
+
+<hi>Determining the API in use and its version</hi>
+
+<p>This is done using the output of <i>glGetString(GL_VERSION)</i>:<\br>
+<ul>
+  <li>In OpenGL, this function returns <i>major_number.minor_number</i> or <i>major_number.minor_number.release_number</i>, optionally followed by a space and vendor-specific information.</li>
+  <li>In OpenGL ES, this function returns <i>OpenGL ES major_number.minor_number</i> or <i>major_number.minor_number.release_number</i> optionally followed by a space and vendor-specific information.</li>
+  <li>In WebGL, this function returns <i>WebGL major_number.minor_number</i> optionally followed by a space and vendor-specific information</i>.</li>
+</ul>
+
+Thus, it is necessary to check if the string begins with "WebGL" or "OpenGL ES" or neither in order to determine what API is currently in use.
+The version of the API in use can then be determined by parsing the major_number.minor_number from the string.
 
 </body>
 </html>
