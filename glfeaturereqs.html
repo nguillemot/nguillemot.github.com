@@ -5,26 +5,124 @@
 </head>
 <body>
 
-<h1>What is this?</h1>
+<h1>GL Feature Requirements</h1>
+
+<h2>What is this?</h2>
 
 <p>With GL it's possible to write one code base that targets a very wide range of platforms,
 which is done by dynamically querying the hardware's capabilities.
 However, it's hard to know what are all the different ways to access a feature and what needs to be checked before using a feature.
 This web page attempts to keep track of all these kinds of decisions to make it easy to write highly compatible code.</p>
 
-<p>From a high level perspective, each GL featurehas different requirements to be available based on:
+<p>From a high level perspective, each GL feature has different requirements to be available based on:
 <ol>
+    <li>The windowing system interface (eg: WGL for Windows, CGL for Mac OS X, GLX for X11, EGL for embedded systems)</li>
     <li>The API in use (eg: OpenGL, OpenGL ES, WebGL)</li>
-    <li>The version of the API in use (eg: GL 4.3, GL ES 3.0, WebGL 2.0)</li>
-    <li>The extensions available (eg: <code>GL_ARB_texture_non_power_of_two</code>, <code>GL_KHR_debug</code>)</li>
+    <li>The version of the API in use (eg: GL 4.3, GL ES 3.0, WebGL 2.0, etc.)</li>
+    <li>The extensions available (eg: <code>GL_ARB_texture_non_power_of_two</code>, <code>GL_KHR_debug</code>, etc.)</li>
 </ol>
 Furthermore, there exists quirks and bugs in GL implementations that will be documented here as they become known.</p>
 
-<h1>Dynamically querying an entry point</h1>
+<h2>Creating an OpenGL context</h2>
 
 TODO
 
-<h1>Determining the API in use and its version</h1>
+<h2>Dynamically querying an entry point</h2>
+
+<p>One great thing about OpenGL is its ability to dynamically query the features supported by the implementation in use,
+which makes it possible to target a wide variety of different OpenGL implementations in one code base.
+This is partly made possible through the concept of <i>entry points</i>,
+which act as channels of communication between your application and the GL driver.
+In practice, these entry points are simple C functions, 
+and they are the bread and butter of any OpenGL application.
+For example, the commonly used function <code>glDrawArrays</code> is an entry point that allows you to tell the GL to draw some geometry.</p>
+
+<p>The available entry points depend on the capabilities of the GL implementation made available to your application.
+Therefore, in order to write highly compatible applications, 
+we should be only use entry points that we are certain are available,
+which can be done by following the guides in this very article.</p>
+
+<p>When you are certain that an entry point is available,
+you can query it through a <code>xxxGetProcAddress</code> function,
+which is slightly different between different platforms.
+These query functions always take a string as input
+(the name of the entry point) and return a pointer to a function that can be used as an entry point.
+Note that a GL context must be made current on the thread that is querying these entry points.</p>
+
+<p>These functions generally return a type-less void pointer (in C: <code>void*</code>)
+which must be casted to a correct function pointer type in order to be called.
+There exist <code>typedef</code>s for these function pointer types in <a href="https://www.opengl.org/registry/">Khronos' OpenGL Registry</a>
+(namely, in the <code>glext.h</code>, <code>glcorearb.h</code>, <code>glxext.h</code>, and <code>wglext.h</code> headers availble for download on that page.)</p>
+
+<ul>
+    <li>Using Windows, one must use <code>wglGetProcAddress</code>.
+        <ul>
+            <li>This fails to find entry points from GL 1.1,
+                so you must use Windows' own <code>GetProcAddress</code> function
+                to query entry points from <code>opengl32.dll</code>.</li>
+            <li>If an entry point is not found, it will return <code>NULL</code>, but this is Windows-specific behaviour.</li>
+            <li>On Windows, entry points can only be used with the same context that was used to query them.</li>
+        </ul>
+    </li>
+    <li>Using Mac OS X, <b>TODO</b></li>
+    <li>Using X11, one must use <code>glxGetProcAddress</code>
+        <ul>
+            <li>Using X11, entry points can be queried from one context and used from another.</li>
+            <li>If an entry point is not found using X11, this function <b>will not</b> return <code>NULL</code>.
+                <ul><li>Yes, you read that correctly. Never depend on the result of <code>glxGetProcAddress</code> being <code>NULL</code>.</li></ul></li>
+        </ul>
+    </li>
+    <li>Using EGL, one must use <code>eglGetProcAddress</code>
+        <ul>
+            <li>EGL's interface is made available from emscripten, 
+                so you can use this function if you're using WebGL from emscripten.</li>
+            <li>EGL's spec requires that entry points that don't exist in the implementation return <code>NULL</code> when queried using this extension.</li>
+        </ul>
+    </li>
+</ul>
+
+<h3>Example Code</h3>
+
+<p>For convenience for the rest of this article,
+this information will be used to define a <code>GetProc</code> function that makes it easy to query for entry points:</p>
+
+<pre>
+// somewhere previous
+#if _WIN32
+    HMODULE hModuleOpenGL32 = LoadLibrary(TEXT("opengl32.dll"));
+#endif
+
+void* GetProc(const char* procname)
+{
+#if _WIN32
+    void* proc = wglGetProcAddress(procname);
+    if (proc == NULL)
+    {
+        proc = GetProcAddress(hModuleOpenGL32, procname);
+    }
+    return proc;
+#elif EMSCRIPTEN
+    return eglGetProcAddress(procname);
+#else
+    // TODO: More platforms!
+#endif
+}
+</pre>
+
+What follows is an example use of the above <code>GetProc</code> function:
+
+<pre>
+#include &lt;GL/glcorearb.h&gt;
+
+// somewhere later...
+PFNGLGETSTRINGPROC glGetString = GetProc("glGetString");
+const char* renderer = glGetString(GL_RENDERER);
+printf("GL_RENDERER: %s\n", renderer);
+</pre>
+
+If this is all too ugly for you, you can use one of the many <a href="https://www.opengl.org/wiki/OpenGL_Loading_Library">OpenGL loading libraries</a>.
+
+<h2>Determining the API in use and its version</h2>
 
 <p>Before doing almost anything else, you need to figure out what API you are using and what version it is.
 This is done using the output of <code>glGetString(GL_VERSION)</code>, which is interpreted as follows:<br/>
@@ -37,16 +135,16 @@ This is done using the output of <code>glGetString(GL_VERSION)</code>, which is 
 <p>Thus, it is necessary to check if the string begins with "WebGL" or "OpenGL ES" or neither in order to determine what API is currently in use.
 The version of the API in use can then be determined by parsing the <b>major_number.minor_number</b> from the string.</p>
 
-<h2>Example code</h2>
+<h3>Example code</h3>
 
 <p>The three OpenGL APIs will be described using the following <code>enum</code>:</p>
 
 <pre>
-enum Api
+enum GLApi
 {
-    OpenGL,
-    OpenGLES,
-    WebGL
+    GLApi_OpenGL,
+    GLApi_OpenGLES,
+    GLApi_WebGL
 };
 </pre>
 
@@ -55,13 +153,13 @@ enum Api
 <pre>
 const char* version = glGetString(GL_VERSION);
 if (strncmp(version, "WebGL ", 6) == 0) {
-    myApi = WebGL;
+    myApi = GLApi_WebGL;
     version += 6;
 } else if (strncmp(version, "OpenGL ES ", 10) == 0) {
-    myApi = OpenGLES;
+    myApi = GLApi_OpenGLES;
     version += 10;
 } else {
-    myApi = OpenGL;
+    myApi = GLApi_OpenGL;
 }
 sscanf(version, "%d.%d", &amp;myMajorVersion, &amp;myMinorVersion);
 </pre>
@@ -69,19 +167,20 @@ sscanf(version, "%d.%d", &amp;myMajorVersion, &amp;myMinorVersion);
 For convenience, this information is used to define a <code>VersionCheck</code> function that makes it easy to check for API versions:
 
 <pre>
-int VersionCheck(Api api, int major, int minor)
+int VersionCheck(GLApi api, int major, int minor)
 {
     return myApi == api
-    &amp;&amp; (myMajorVersion &gt; major || (myMajorVersion == major &amp;&amp; myMinorVersion &gt;= minor));
+           &amp;&amp; (myMajorVersion &gt; major ||
+              (myMajorVersion == major &amp;&amp; myMinorVersion &gt;= minor));
 }
 </pre>
 
-<h1>Determining the available extensions</h1>
+<h2>Determining the available extensions</h2>
 
 <p>There are two ways to get the list of extensions depending on the version of the GL:
 <code>glGetStringi(GL_EXTENSIONS, i)</code> and <code>glGetString(GL_EXTENSIONS)</code>.
 The first method allows you to iterate over individual extensions by their index, 
-while the second method returns a big string that stores the names of the supported extensions, separated by spaces.
+while the second method returns a big string that stores the names of the supported extensions separated by spaces.
 The first method is more convenient, but only available in more modern implementations.
 The second method is slightly inconvenient because it requires parsing the extension string.</p>
 
@@ -89,7 +188,78 @@ The second method is slightly inconvenient because it requires parsing the exten
 which are <code>getExtension</code> and <code>getSupportedExtensions</code>, respectively.
 If you are using WebGL through emscripten, calls of <code>glGetString(GL_EXTENSIONS)</code> automatically get translated to those WebGL-specific calls.</p>
 
-<h2>Example code</h2>
+<ul>
+    <li>With OpenGL 3 or OpenGL ES 3, <code>glGetStringi</code> is available.</li>
+    <li>Otherwise, one must use <code>glGetString</code> (or use the special WebGL versions if you so desire.)</li>
+</ul>
+
+<h3>Example code</h3>
+
+What follows is a convenience function that checks whether an extension is supported or not.
+
+<pre>
+int ExtensionCheck(const char* extension)
+{
+    if (VersionCheck(GLApi_OpenGL, 3, 0)
+    ||  VersionCheck(GLApi_OpenGLES, 3, 0))
+    {
+        PFNGLGETINTEGERVPROC glGetIntegerv = GetProc("glGetIntegerv");
+        PFNGLGETSTRINGIPROC glGetStringi = GetProc("glGetStringi");
+        
+        GLint numExtensions;
+        glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
+        for (GLint i = 0; i &lt; numExtensions; i++)
+        {
+            const char* currExtension = glGetStringi(GL_EXTENSIONS, i);
+            if (strcmp(extension, currExtension) == 0)
+            {
+                return 1;
+            }
+        }
+    }
+    else if (VersionCheck(GLApi_OpenGL, 1, 0)
+         ||  VersionCheck(GLApi_OpenGLES, 1, 0)
+         ||  VersionCheck(GLApi_WebGL, 1, 0))
+    {
+        PFNGLGETSTRINGPROC glGetString = GetProc("glGetString");
+        
+        const char* extensions = glGetString(GL_EXTENSIONS);
+        
+        while (1)
+        {
+            const char* next = strchr(extensions, ' ');
+            if ((next != NULL &amp;&amp; strncmp(extension, extensions, next - extensions) == 0)
+            ||  (next == NULL &amp;&amp; strcmp(extension, extensions) == 0))
+            {
+                return 1;
+            }
+            
+            if (next == NULL) break;
+            extensions = next + 1;
+        }
+    }
+    
+    return 0;
+}
+</pre>
+
+<h2><code>GL_CLAMP_TO_EDGE</code> support</h2>
+
+TODO
+
+<h2>Vertex buffer object support</h2>
+
+TODO
+
+<h2>Vertex array object support</h2>
+
+TODO
+
+<h2>Debug callback support</h2>
+
+TODO
+
+<h2>NPOT (Non-Power-Of-Two) texture support</h2>
 
 TODO
 
