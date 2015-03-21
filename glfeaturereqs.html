@@ -229,7 +229,6 @@ What follows is a convenience function that checks whether an extension is suppo
             PFNGLGETSTRINGPROC glGetString = GetProc("glGetString");
             
             const char* extensions = glGetString(GL_EXTENSIONS);
-            
             while (1)
             {
                 const char* next = strchr(extensions, ' ');
