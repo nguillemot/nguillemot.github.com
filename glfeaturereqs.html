@@ -88,20 +88,20 @@ this information will be used to define a <code>GetProc</code> function that mak
 
 <pre>
 // somewhere previous
-#if _WIN32
+#ifdef _WIN32
     HMODULE hModuleOpenGL32 = LoadLibrary(TEXT("opengl32.dll"));
 #endif
 
 void* GetProc(const char* procname)
 {
-#if _WIN32
+#ifdef _WIN32
     void* proc = wglGetProcAddress(procname);
     if (proc == NULL)
     {
         proc = GetProcAddress(hModuleOpenGL32, procname);
     }
     return proc;
-#elif EMSCRIPTEN
+#elif defined(EMSCRIPTEN)
     return eglGetProcAddress(procname);
 #else
     // TODO: More platforms!
