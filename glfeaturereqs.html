@@ -14,14 +14,37 @@ which is done by dynamically querying the hardware's capabilities.
 However, it's hard to know what are all the different ways to access a feature and what needs to be checked before using a feature.
 This web page attempts to keep track of all these kinds of decisions to make it easy to write highly compatible code.</p>
 
-<p>From a high level perspective, each GL feature has different requirements to be available based on:
+<p>From a high level perspective, each GL feature has different requirements to be available based on:</p>
+
 <ol>
     <li>The windowing system interface. (eg: WGL for Windows, CGL for Mac OS X, GLX for X11, EGL for embedded systems)</li>
     <li>The API in use. (eg: OpenGL, OpenGL ES, WebGL)</li>
     <li>The version of the API in use. (eg: GL 4.3, GL ES 3.0, WebGL 2.0, etc.)</li>
     <li>The extensions available. (eg: <code>GL_ARB_texture_non_power_of_two</code>, <code>GL_KHR_debug</code>, etc.)</li>
 </ol>
-Furthermore, there exists quirks and bugs in GL implementations that will be documented here as they become known.</p>
+
+<p>Furthermore, there exists quirks and bugs in GL implementations that will be documented here as they become known.</p>
+
+<h2>Disclaimer</h2>
+
+<p>Adapted from the <a href="http://en.wikipedia.org/wiki/MIT_License">MIT license</a>:</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+
+<p>tl;dr: It's your responsibility to fact-check the information on this page if you're doing serious work.
+If you do find a mistake on this page, please help everybody by opening an issue or submitting a pull request on the GitHub repository for the website.
+You can also contact me by e-mail, which is available on <a href="https://github.com/nguillemot">my GitHub page</a>.</p>
+
+<h2>Other resources</h2>
+
+<p>There are lots of other websites that can help with OpenGL compatibility. Consider checking these out:</p>
+
+<ul>
+    <li><a href="http://web.eecs.umich.edu/~sugih/courses/eecs487/common/notes/APITables.xml">OpenGL, OpenGL ES, WebGL, GLSL, GLSL ES API Tables</a></li>
+    <li><a href="http://delphigl.de/glcapsviewer/gl_listreports">OpenGL Hardware Database</a></li>
+    <li><a href="http://gfxbench.com/">GFXBench</a></li>
+</ul>
 
 <h2>Creating an OpenGL context</h2>
 
@@ -51,7 +74,8 @@ Note that a GL context must be made current on the thread that is querying these
 <p>The <code>xxxGetProcAddress</code> functions typically return a type-less void pointer (in C: <code>void*</code>)
 which must be casted to a correct function pointer type in order to be called.
 There exist <code>typedef</code>s for these function pointer types in <a href="https://www.opengl.org/registry/">Khronos' OpenGL Registry</a>
-(namely, in the <code>glext.h</code>, <code>glcorearb.h</code>, <code>glxext.h</code>, and <code>wglext.h</code> headers availble for download on that page.)</p>
+(namely, in the <code>glext.h</code>, <code>glcorearb.h</code>, <code>glxext.h</code>, and <code>wglext.h</code> headers availble for download on that page.)
+Similar headers are available for OpenGL ES from the <a href="https://www.khronos.org/registry/gles/">Khronos OpenGL ES Registry</a>.</p>
 
 <ul>
     <li>Using Windows, one must use <code>wglGetProcAddress</code>.
@@ -247,25 +271,336 @@ What follows is a convenience function that checks whether an extension is suppo
     }
 </pre>
 
-<h2><code>GL_CLAMP_TO_EDGE</code> support</h2>
+<h2><code>GL_CLAMP_TO_EDGE</code></h2>
+
+<p>Did you know <code>GL_CLAMP_TO_EDGE</code> didn't always exist?
+Yeah, there was a point where pretty much everything was tiled, so people just used <code>GL_REPEAT</code> I suppose.
+It was originally exposed as <code>GL_SGIS_texture_edge_clamp</code> and quickly became a standard feature of GL implementations.</p>
+
+<p>In the <code>SGIS</code> implementation, it was exposed as the constant <code>GL_CLAMP_TO_EDGE_SGIS</code>. 
+Thankfully, this constant has the same value as the standard <code>GL_CLAMP_TO_EDGE</code>,
+so your code can just use <code>GL_CLAMP_TO_EDGE</code> without the <code>SGIS</code> prefix when this feature is supported.</p>
+
+<h3>Example code</h3>
+
+<pre>
+    int clampToEdgeSupported = 0;
+    if (VersionCheck(GLApi_OpenGL, 1, 2)
+    ||  VersionCheck(GLApi_OpenGLES, 1, 0)
+    ||  VersionCheck(GLApi_WebGL, 1, 0)
+    || (VersionCheck(GLApi_OpenGL, 1, 0) && ExtensionCheck("GL_SGIS_texture_edge_clamp")))
+    {
+        clampToEdgeSupported = 1;
+    }
+</pre>
+
+<h2><code>GL_ARB_vertex_buffer_object</code></h2>
+
+<p>Vertex buffers are a pretty awesome feature.
+They allow you to allocate GPU memory and upload data to them up front,
+so you don't need to constantly re-submit your geometry every time you want to draw.
+Vertex buffers are so useful that they became widely available in GL pretty early on.
+However, reading back from buffers and mapping buffers are areas where OpenGL ES and WebGL fall behind.</p>
+
+<h3>Example code</h3>
+
+<pre>
+    PFNGLBINDBUFFERPROC glBindBuffer = NULL;
+    PFNGLDELETEBUFFERSPROC glDeleteBuffers = NULL;
+    PFNGLGENBUFFERSPROC glGenBuffers = NULL;
+    PFNGLISBUFFERPROC glIsBuffer = NULL;
+    PFNGLBUFFERDATAPROC glBufferData = NULL;
+    PFNGLBUFFERSUBDATAPROC glBufferSubData = NULL;
+    PFNGLGETBUFFERSUBDATAPROC glGetBufferSubData = NULL;
+    PFNGLMAPBUFFERPROC glMapBuffer = NULL;
+    PFNGLUNMAPBUFFERPROC glUnmapBuffer = NULL;
+    PFNGLGETBUFFERPARAMETERIVPROC glGetBufferParameteriv = NULL;
+    PFNGLGETBUFFERPOINTERVPROC glGetBufferPointerv = NULL;
+    if (VersionCheck(GLApi_OpenGL, 1, 5)
+    ||  VersionCheck(GLApi_OpenGLES, 1, 1)
+    ||  VersionCheck(GLApi_WebGL, 1, 0))
+    {
+        glBindBuffer = GetProc("glBindBuffer");
+        glDeleteBuffers = GetProc("glDeleteBuffers");
+        glGenBuffers = GetProc("glGenBuffers");
+        glIsBuffer = GetProc("glIsBuffer");
+        glBufferData = GetProc("glBufferData");
+        glBufferSubData = GetProc("glBufferSubData");
+        
+        if (VersionCheck(GLApi_OpenGL, 1, 5))
+        {
+            glGetBufferSubData = GetProc("glGetBufferSubData");
+            glMapBuffer = GetProc("glMapBuffer");
+            glUnmapBuffer = GetProc("glUnmapBuffer");
+            glGetBufferPointerv = GetProc("glGetBufferPointerv");
+        }
+        else if (VersionCheck(GLApi_OpenGLES, 1, 1)
+             &amp;&amp;  ExtensionCheck("GL_OES_mapbuffer"))
+        {
+            glMapBuffer = GetProc("glMapBufferOES");
+            glUnmapBuffer = GetProc("glUnmapBufferOES");
+            glGetBufferPointerv = GetProc("glGetBufferPointervOES");
+        }
+        
+        glGetBufferParameteriv = GetProc("glGetBufferParameteriv");
+    }
+    else if (VersionCheck(GLApi_OpenGL, 1, 0)
+         &amp;&amp;  ExtensionCheck("GL_ARB_vertex_buffer_object"))
+    {
+        glBindBuffer = GetProc("glBindBufferARB");
+        glDeleteBuffers = GetProc("glDeleteBuffersARB");
+        glGenBuffers = GetProc("glGenBuffersARB");
+        glIsBuffer = GetProc("glIsBufferARB");
+        glBufferData = GetProc("glBufferDataARB");
+        glBufferSubData = GetProc("glBufferSubDataARB");
+        glGetBufferSubData = GetProc("glGetBufferSubDataARB");
+        glMapBuffer = GetProc("glMapBufferARB");
+        glUnmapBuffer = GetProc("glUnmapBufferARB");
+        glGetBufferPointerv = GetProc("glGetBufferPointervARB");
+    }
+</pre>
+    
+<h2><code>GL_ARB_map_buffer_range</code></h2>
 
 TODO
 
-<h2>Vertex buffer object support</h2>
+<h2><code>GL_ARB_vertex_array_object</code></h2>
+
+<p>Storing the setup of your vertex data in a vertex array object is a commonly available extension on new-ish implementations.
+The interface for manipulating these vertex array objects is confusing because it uses so much global state,
+so I recommend taking the time to read the actual GL specs to really understand what state is being stored in a VAO and how to manipulate this state.
+(Protip: There are state tables at the end of GL specification documents.)</p>
+
+<p>Sometimes using VAOs to store vertex array state is optional (and you can use a default global VAO instead),
+but some modern implementations require you to have a VAO bound if you want to make any draw calls.
+If you don't like this restriction, then just generate a single VAO and bind it at the start of your program!</p>
+
+<p>Note that all the functions for actually manipulating VAO state come from other extensions.
+VAOs have become a bit of a chimera because of this.</p>
+
+<h3>Example code</h3>
+
+<pre>
+    PFNGLBINDVERTEXARRAYPROC glBindVertexArray = NULL;
+    PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays = NULL;
+    PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = NULL;
+    PFNGLISVERTEXARRAYPROC glIsVertexArray = NULL;
+    if (VersionCheck(GLApi_OpenGL, 3, 0)
+    ||  VersionCheck(GLApi_OpenGLES, 3, 0)
+    ||  VersionCheck(GLApi_WebGL, 2, 0)
+    || (VersionCheck(GLApi_OpenGL, 1, 0) &amp;&amp; ExtensionCheck("GL_ARB_vertex_array_object")))
+    {
+        // note: interestingly, GL_ARB_vertex_array_object entry points aren't defined with the ARB suffix.
+        glBindVertexArray = GetProc("glBindVertexArray");
+        glDeleteVertexArrays = GetProc("glDeleteVertexArrays");
+        glGenVertexArrays = GetProc("glGenVertexArrays");
+        glIsVertexArray = GetProc("glIsVertexArray");
+    }
+    else if (VersionCheck(GLApi_OpenGL, 1, 0)
+         &amp;&amp; ExtensionCheck("GL_APPLE_vertex_array_object"))
+    {
+        glBindVertexArray = GetProc("glBindVertexArrayAPPLE");
+        glDeleteVertexArrays = GetProc("glDeleteVertexArraysAPPLE");
+        glGenVertexArrays = GetProc("glGenVertexArraysAPPLE");
+        glIsVertexArray = GetProc("glIsVertexArrayAPPLE");
+    }
+    else if ((VersionCheck(GLApi_OpenGLES, 1, 0) &amp;&amp; ExtensionCheck("GL_OES_vertex_array_object"))
+         ||  (VersionCheck(GLApi_WebGL, 1, 0) &amp;&amp; ExtensionCheck("OES_vertex_array_object")))
+    {
+        glBindVertexArray = GetProc("glBindVertexArrayOES");
+        glDeleteVertexArrays = GetProc("glDeleteVertexArraysOES");
+        glGenVertexArrays = GetProc("glGenVertexArraysOES");
+        glIsVertexArray = GetProc("glIsVertexArrayOES");
+    }
+</pre>
+
+<h2><code>GL_ARB_instanced_arrays</code></h2>
+
+<p>This extension made it possible to use share a vertex attribute between multiple consecutive instanced draws.</p>
+
+<h3>Example code</h3>
+
+<pre>
+    PFNGLVERTEXATTRIBDIVISORPROC glVertexAttribDivisor = NULL;
+    if (VersionCheck(GLApi_OpenGL, 3, 3)
+    ||  VersionCheck(GLApi_OpenGLES, 3, 0)
+    ||  VersionCheck(GLApi_WebGL, 2, 0))
+    {
+        glVertexAttribDivisor = GetProc("glVertexAttribDivisor");
+    }
+    else if (VersionCheck(GLApi_OpenGL, 1, 1)
+         &amp;&amp;  ExtensionCheck("GL_ARB_instanced_arrays"))
+    {
+        glVertexAttribDivisor = GetProc("glVertexAttribDivisorARB");
+    }
+    else if (VersionCheck(GLApi_OpenGLES, 2, 0))
+    {
+        if (ExtensionCheck("GL_ANGLE_instanced_arrays"))
+        {
+            glVertexAttribDivisor = GetProc("glVertexAttribDivisorANGLE");
+        }
+        else if (ExtensionCheck("GL_NV_instanced_arrays"))
+        {
+            glVertexAttribDivisor = GetProc("glVertexAttribDivisorNV");
+        }
+        else if (ExtensionCheck("GL_EXT_instanced_arrays"))
+        {
+            glVertexAttribDivisor = GetProc("glVertexAttribDivisorEXT");
+        }
+    }
+    else if (VersionCheck(GLApi_WebGL, 1, 0)
+         &amp;&amp;  ExtensionCheck("ANGLE_instanced_arrays"))
+    {
+        glVertexAttribDivisor = GetProc("glVertexAttribDivisorANGLE");
+    }
+</pre>
+
+<h2><code>GL_ARB_vertex_attrib_binding</code></h2>
 
 TODO
 
-<h2>Vertex array object support</h2>
+<h2><code>glBindVertexBuffers</code></h2>
 
-TODO
+<p>This function allows you to make multiple <code>glBindVertexBuffer</code> calls at the time time.</p>
 
-<h2>Debug callback support</h2>
+<h3>Example code</h3>
 
-TODO
+<pre>
+    PFNGLBINDVERTEXBUFFERSPROC glBindVertexBuffers = NULL;
+    if (VersionCheck(GLApi_OpenGL, 4, 4))
+    {
+        glBindVertexBuffers = GetProc("glBindVertexBuffers");
+    }
+</pre>
 
-<h2>NPOT (Non-Power-Of-Two) texture support</h2>
+<h2><code>GL_KHR_debug</code></h2>
 
-TODO
+<p>This extension adds lots of debug functionality to GL, which is usually only available in debug contexts.
+Subsets of it are available if you support <code>GL_[ARB|AMD]_debug_output</code>.
+It should be noted that the <code>AMD</code> version of this extension uses a different signature for the debug callback.
+(In general, you should have a separate code path if you're using the <code>AMD</code> extension for debugging.)
+Also, <code>GL_KHR_debug</code> exposes significantly more features than the plain <code>GL_[ARB|AMD]_debug_output</code> extensions.</p>
+
+<h3>Example code</h3>
+
+<pre>
+    PFNGLDEBUGMESSAGEENABLEAMDPROC glDebugMessageEnableAMD = NULL;
+    PFNGLDEBUGMESSAGEINSERTAMDPROC glDebugMessageInsertAMD = NULL;
+    PFNGLDEBUGMESSAGECALLBACKAMDPROC glDebugMessageCallbackAMD = NULL;
+    PFNGLGETDEBUGMESSAGELOGAMDPROC glGetDebugMessageLogAMD = NULL;
+    PFNGLDEBUGMESSAGECONTROLPROC glDebugMessageControl = NULL;
+    PFNGLDEBUGMESSAGEINSERTPROC glDebugMessageInsert = NULL;
+    PFNGLDEBUGMESSAGECALLBACKPROC glDebugMessageCallback = NULL;
+    PFNGLGETDEBUGMESSAGELOGPROC glGetDebugMessageLog = NULL;
+    PFNGLGETPOINTERVPROC glGetPointerv = NULL;
+    PFNGLPUSHDEBUGGROUPPROC glPushDebugGroup = NULL;
+    PFNGLPOPDEBUGGROUPPROC glPopDebugGroup = NULL;
+    PFNGLOBJECTLABELPROC glObjectLabel = NULL;
+    PFNGLGETOBJECTLABELPROC glGetObjectLabel = NULL;
+    PFNGLOBJECTPTRLABELPROC glObjectPtrLabel = NULL;
+    PFNGLGETOBJECTPTRLABEL glGetObjectPtrLabel = NULL;
+    if (VersionCheck(GLApi_OpenGL, 4, 3)
+    || (VersionCheck(GLApi_OpenGL, 1, 1) &amp;&amp; ExtensionCheck("GL_KHR_debug")))
+    {
+        glDebugMessageControl = GetProc("glDebugMessageControl");
+        glDebugMessageInsert = GetProc("glDebugMessageInsert");
+        glDebugMessageCallback = GetProc("glDebugMessageCallback");
+        glGetDebugMessageLog = GetProc("glGetDebugMessageLog");
+        glGetPointerv = GetProc("glGetPointerv");
+        glPushDebugGroup = GetProc("glPushDebugGroup");
+        glPopDebugGroup = GetProc("glPopDebugGroup");
+        glObjectLabel = GetProc("glObjectLabel");
+        glGetObjectLabel = GetProc("glGetObjectLabel");
+        glObjectPtrLabel = GetProc("glObjectPtrLabel");
+        glGetObjectPtrLabel = GetProc("glGetObjectPtrLabel");
+    }
+    else if (VersionCheck(GLApi_OpenGL, 1, 1)
+         &amp;&amp;  ExtensionCheck("GL_ARB_debug_output"))
+    {
+        glDebugMessageControl = GetProc("glDebugMessageControlARB");
+        glDebugMessageInsert = GetProc("glDebugMessageInsertARB");
+        glDebugMessageCallback = GetProc("glDebugMessageCallbackARB");
+        glGetDebugMessageLog = GetProc("glGetDebugMessageLogARB");
+        glGetPointerv = GetProc("glGetPointerv");
+    }
+    else if (VersionCheck(GLApi_OpenGL, 1, 1)
+         &amp;&amp;  ExtensionCheck("GL_AMD_debug_output"))
+    {
+        glDebugMessageEnableAMD = GetProc("glDebugMessageEnableAMD");
+        glDebugMessageInsertAMD = GetProc("glDebugMessageInsertAMD");
+        glDebugMessageCallbackAMD = GetProc("glDebugMessageCallbackAMD");
+        glGetDebugMessageLogAMD = GetProc("glDebugMessageLogAMD");
+    }
+    else if (VersionCheck(GLApi_OpenGLES, 1, 0)
+         &amp;&amp;  ExtensionCheck("GL_KHR_debug"))
+    {
+        glDebugMessageControl = GetProc("glDebugMessageControlKHR");
+        glDebugMessageInsert = GetProc("glDebugMessageInsertKHR");
+        glDebugMessageCallback = GetProc("glDebugMessageCallbackKHR");
+        glGetDebugMessageLog = GetProc("glGetDebugMessageLogKHR");
+        glGetPointerv = GetProc("glGetPointervKHR");
+        glPushDebugGroup = GetProc("glPushDebugGroupKHR");
+        glPopDebugGroup = GetProc("glPopDebugGroupKHR");
+        glObjectLabel = GetProc("glObjectLabelKHR");
+        glGetObjectLabel = GetProc("glGetObjectLabelKHR");
+        glObjectPtrLabel = GetProc("glObjectPtrLabelKHR");
+        glGetObjectPtrLabel = GetProc("glGetObjectPtrLabelKHR");
+    }
+</pre>
+
+<h2><code>GL_ARB_texture_non_power_of_two</code></h2>
+
+<p>Not all OpenGL implementations can use NPOT textures freely:
+Some can't use them at all, some can use them but not repeat or mipmap them,
+while more modern implementations allow all operations on NPOT textures.</p>
+
+<h3>Example code</h3>
+
+<p>This is pretty much adapted right out of <a href="http://aras-p.info/blog/2012/10/17/non-power-of-two-textures/">Aras' awesome blog post on this topic</a>,
+which you should read if you want more information about NPOT texture support.</p>
+
+<pre>
+    // See Aras' blog post to understand what these classifications mean.
+    // Can do convenient stuff, like "if (npotSupport &gt;= NPOT_Limited)"
+    enum NPOTSupport
+    {
+        NPOT_None,
+        NPOT_Limited,
+        NPOT_Full
+    };
+    
+    NPOTSupport npotSupport = NPOT_None;
+    if (VersionCheck(GLApi_OpenGL, 3, 0)
+    ||  VersionCheck(GLApi_OpenGLES, 3, 0)
+    ||  VersionCheck(GLApi_WebGL, 2, 0))
+    {
+        npotSupport = NPOT_Full;
+    }
+    else if (VersionCheck(GLApi_OpenGL, 2, 0)
+         || (VersionCheck(GLApi_OpenGL, 1, 0) &amp;&amp; ExtensionCheck("GL_ARB_texture_non_power_of_two")))
+    {
+        // TODO: Attempt to find if a DX10+ level GPU is running to use full NPOT support.
+        // See Aras' blog post for some heuristics.
+        npotSupport = NPOT_Limited;
+    }
+    else if (VersionCheck(GLApi_OpenGLES, 1, 0))
+    {
+        if (ExtensionCheck("GL_ARB_texture_non_power_of_two")
+        ||  ExtensionCheck("GL_OES_texture_npot"))
+        {
+            npotSupport = NPOT_Full;
+        }
+        else if (ExtensionCheck("GL_APPLE_texture_2D_limited_npot")
+             ||  ExtensionCheck("GL_IMG_texture_npot"))
+        {
+            npotSupport = NPOT_Limited;
+        }
+    }
+    else if (VersionCheck(GLApi_WebGL, 1, 0))
+    {
+        npotSupport = NPOT_Limited;
+    }
+</pre>
 
 </body>
 </html>
