@@ -457,7 +457,29 @@ VAOs have become a bit of a chimera because of this.</p>
 
 <h2><code>GL_ARB_vertex_attrib_binding</code></h2>
 
-TODO
+<p>At some point, somebody thought it was a good idea to separate the format of attributes and the buffers they are bound to.
+This is arguably a good idea, but it makes a lot of state in VAOs weirdly redundant.
+(Namely, the "pointer" set from <code>glVertexAttribPointer</code> now becomes an arbitrary userdata pointer which you can set to whatever you want,
+since it now only has use in compatibility mode.)
+Take the time to really read and understand the specs if you want to use this feature.</p>
+
+<h3>Example code</h3>
+
+<pre>
+    PFNGLBINDVERTEXBUFFERPROC glBindVertexBuffer = NULL;
+    PFNGLVERTEXATTRIBFORMATPROC glVertexAttribFormat = NULL;
+    PFNGLVERTEXATTRIBBINDINGPROC glVertexAttribBinding = NULL;
+    PFNGLVERTEXBINDINGDIVISORPROC glVertexBindingDivisor = NULL;
+    if (VersionCheck(GLApi_OpenGL, 4, 3)
+    || (VersionCheck(GLApi_OpenGL, 4, 2) &amp;&amp; ExtensionCheck("GL_ARB_vertex_attrib_binding"))
+    ||  VersionCheck(GLApi_OpenGLES, 3, 1))
+    {
+        glBindVertexBuffer = GetProc("glBindVertexBuffer");
+        glVertexAttribFormat = GetProc("glVertexAttribFormat");
+        glVertexAttribBinding = GetProc("glVertexAttribBinding");
+        glVertexBindingDivisor = GetProc("glVertexBindingDivisor");
+    }
+</pre>
 
 <h2><code>glBindVertexBuffers</code></h2>
 
