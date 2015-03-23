@@ -583,44 +583,44 @@ which you should read if you want more information about NPOT texture support.</
 
 <pre>
     // See Aras' blog post to understand what these classifications mean.
-    // Can do convenient stuff, like "if (npotSupport &gt;= NPOT_Limited)"
+    // Can do convenient stuff, like "if (npotSupport &gt;= NPOTSupport_Limited)"
     enum NPOTSupport
     {
-        NPOT_None,
-        NPOT_Limited,
-        NPOT_Full
+        NPOTSupport_None,
+        NPOTSupport_Limited,
+        NPOTSupport_Full
     };
     
-    NPOTSupport npotSupport = NPOT_None;
+    NPOTSupport npotSupport = NPOTSupport_None;
     if (VersionCheck(GLApi_OpenGL, 3, 0)
     ||  VersionCheck(GLApi_OpenGLES, 3, 0)
     ||  VersionCheck(GLApi_WebGL, 2, 0))
     {
-        npotSupport = NPOT_Full;
+        npotSupport = NPOTSupport_Full;
     }
     else if (VersionCheck(GLApi_OpenGL, 2, 0)
          || (VersionCheck(GLApi_OpenGL, 1, 0) &amp;&amp; ExtensionCheck("GL_ARB_texture_non_power_of_two")))
     {
         // TODO: Attempt to find if a DX10+ level GPU is running to use full NPOT support.
         // See Aras' blog post for some heuristics.
-        npotSupport = NPOT_Limited;
+        npotSupport = NPOTSupport_Limited;
     }
     else if (VersionCheck(GLApi_OpenGLES, 1, 0))
     {
         if (ExtensionCheck("GL_ARB_texture_non_power_of_two")
         ||  ExtensionCheck("GL_OES_texture_npot"))
         {
-            npotSupport = NPOT_Full;
+            npotSupport = NPOTSupport_Full;
         }
         else if (ExtensionCheck("GL_APPLE_texture_2D_limited_npot")
              ||  ExtensionCheck("GL_IMG_texture_npot"))
         {
-            npotSupport = NPOT_Limited;
+            npotSupport = NPOTSupport_Limited;
         }
     }
     else if (VersionCheck(GLApi_WebGL, 1, 0))
     {
-        npotSupport = NPOT_Limited;
+        npotSupport = NPOTSupport_Limited;
     }
 </pre>
 
